@@ -1,0 +1,5 @@
+flask
+flask-restx
+flask-swagger-ui
+sqlalchemy
+Flask-SQLAlchemy

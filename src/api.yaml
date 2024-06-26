@@ -1,0 +1,335 @@
+openapi: 3.0.3
+info:
+  title: Game Level Management API
+  version: 1.1.0
+servers:
+  - url: http://localhost:5000
+tags:
+  - name: Level Management
+    description: Manage game levels
+  - name: Level Statistic Management
+    description: Manage level statistics
+  - name: Level Leaderboard Management
+    description: Manage level leaderboards
+paths:
+  /level:
+    get:
+      tags:
+        - Level Management
+      summary: Get all levels
+      responses:
+        '200':
+          description: Array of Level objects
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Level'
+    post:
+      tags:
+        - Level Management
+      summary: Add a new level
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LevelRequest'
+      responses:
+        '201':
+          description: Created Level
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Level'
+  /level/{id}:
+    get:
+      tags:
+        - Level Management
+      summary: Get level by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Level object
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Level'
+    delete:
+      tags:
+        - Level Management
+      summary: Delete level by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Deleted Level object
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Level'
+    put:
+      tags:
+        - Level Management
+      summary: Update level by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LevelRequest'
+      responses:
+        '200':
+          description: Updated Level object
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Level'
+  /stats/level/{id}:
+    get:
+      tags:
+        - Level Statistic Management
+      summary: Get statistics for level by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: LevelStat object
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LevelStat'
+    post:
+      tags:
+        - Level Statistic Management
+      summary: Update statistics for level by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LevelUpdateStat'
+      responses:
+        '200':
+          description: Updated LevelStat object
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LevelStat'
+  /leaderboard/level/{id}:
+    get:
+      tags:
+        - Level Leaderboard Management
+      summary: Get leaderboard for level by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Leaderboard object
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Leaderboard'
+    post:
+      tags:
+        - Level Leaderboard Management
+      summary: Add new record to leaderboard
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LeaderboardRequest'
+      responses:
+        '200':
+          description: LeaderboardItem object or null if not a new record
+          content:
+            application/json:
+              schema:
+                  $ref: '#/components/schemas/LeaderboardItem'
+components:
+  schemas:
+    GameTypeSchema:
+      type: object
+      properties:
+        GameType:
+          type: integer
+          enum: [0, 1]
+          description: Game type. 0 for single, 1 for coop.
+          example: 0
+    GameModeSchema:
+      type: object
+      properties:
+        GameMode:
+          type: integer
+          enum: [0, 1]
+          description: Game mode. 0 for point, 1 for time.
+          example: 0
+    LevelRequest:
+      type: object
+      properties:
+        Name:
+          type: string
+          description: Name of the level
+        Summary:
+          type: string
+          description: 50 characters of summary
+        Thresholds:
+          type: array
+          minLength: 2
+          maxLength: 2
+          description: Thresholds[GameType][GameMode][i], where GameType=0..1, GameMode=0..1, and i=0..2
+          items:
+            type: array
+            minLength: 2
+            maxLength: 2
+            items:
+              type: array
+              minLength: 3
+              maxLength: 3
+              items:
+                type: integer
+        SystemDescription:
+          type: string
+          description: Long paragraph of system to build
+        LevelSchema:
+          type: string
+          description: Level schema
+    Level:
+      allOf:
+        - type: object
+          properties:
+            Id:
+              type: integer
+              description: Unique ID of the level
+          description: Add level request
+        - $ref: '#/components/schemas/LevelRequest'
+    LevelStat:
+      type: object
+      properties:
+        Id:
+          type: integer
+          description: Unique ID of the level
+        TotalCompleted:
+          type: array
+          description: TotalCompleted[GameType]
+          minLength: 2
+          maxLength: 2
+          items:
+            type: integer
+          example: [0,0]
+        Averages:
+          type: array
+          description: Averages[GameType][GameMode]
+          minLength: 2
+          maxLength: 2
+          items:
+            type: array
+            minLength: 2
+            maxLength: 2
+            items:
+              type: number
+        CountStars:
+          type: array
+          description: TotalStars[GameType][GameMode][StarCount]. StarCount = 0..3
+          minLength: 2
+          maxLength: 2
+          items:
+            type: array
+            minLength: 2
+            maxLength: 2
+            items:
+              type: array
+              minLength: 4
+              maxLength: 4
+              items:
+                type: integer
+    LevelUpdateStat:
+      allOf:
+        - $ref: '#/components/schemas/GameTypeSchema'
+        - $ref: '#/components/schemas/GameModeSchema'
+        - type: object
+          properties:
+            Value:
+              type: integer
+              description: Point or time in milliseconds
+    Leaderboard:
+      type: object
+      properties:
+        Id:
+          type: integer
+          description: Unique ID of the level, should exist in Level
+        Boards:
+          description: Boards[GameType][GameMode][i], already sorted, for best 10 records.
+          type: array
+          maxLength: 2
+          items:
+            type: array
+            maxLength: 2
+            items:
+              type: array
+              maxLength: 10
+              items:
+                $ref: '#/components/schemas/LeaderboardItem'
+    LeaderboardItem:
+      type: object
+      properties:
+        Rank:
+          type: integer
+          description: Rank of the player.
+        ProfileName:
+          type: string
+          description: Player's profile name.
+        Value:
+          type: integer
+          description: Point or time value.
+    LeaderboardRequest:
+      allOf:
+        - $ref: '#/components/schemas/GameTypeSchema'
+        - $ref: '#/components/schemas/GameModeSchema'
+        - type: object
+          nullable: true
+          example: null
+          properties:
+            ProfileName:
+              type: string
+              description: In-game profile name
+            Value:
+              type: integer
+              description: Point value or time in milliseconds
